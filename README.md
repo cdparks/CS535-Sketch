@@ -43,5 +43,6 @@ and a Bezier curve is generated.
 
 #Contact
 
-Christopher D. Parks (<chris.parks@uky.edu>)
+Christopher D. Parks (<chris.parks@uky.edu>)  
+hosted on [github][https://github.com/cdparks/CS535-Sketch]
 
