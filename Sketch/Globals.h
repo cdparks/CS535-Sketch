@@ -28,9 +28,11 @@ static const char *MENU[] = {
 	"| O - Circle          |",
 	"| S - Curve           |",
 	"| C - Clock           |",
+	"+---------------------+",
+	"| P - Control Points  |",
+	"+---------------------+",
 	"| U - Undo            |",
 	"| X - Clear           |",
-	"| P - Control Points  |",
 	"| Q - Quit            |",
 	"+---------------------+"
 };
