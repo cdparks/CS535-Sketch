@@ -7,6 +7,7 @@ using namespace std;
 
 #include "Globals.h"
 
+// VertexBuffer stores and draws calculated pixel data
 struct VertexBuffer{
 	VertexBuffer(vector<Point2D> &points){
 		size = 2 * (points.size() + 1);

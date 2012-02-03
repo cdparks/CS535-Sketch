@@ -10,9 +10,12 @@ using namespace std;
 // DrawContext can be in one of 5 states 
 enum State { LINE, CIRCLE, CURVE, CLOCK, UNKNOWN };
 
+// DrawContext maintains the state of the sketch pad as well
+// as a stack of pixel data for each drawing type.
 class DrawContext{
 public:
-	// Public callbacks for glut
+	// Public callbacks for glut (cannot use instance methods for 
+	// callbacks).
 	static void Display(void);
 	static void Keyboard(unsigned char key, int x, int y);
 	static void Mouse(int button, int state, int x, int y);
@@ -20,7 +23,7 @@ public:
 	static void Resize(GLint newWidth, GLint newHeight);
 
 private:
-	// Get Singleton
+	// Get private singleton
 	static DrawContext& get_instance();
 	
 	// Don't instantiate anywhere but from get_instance
@@ -64,11 +67,11 @@ private:
 	void point_finish(GLint button, GLint x, GLint y);
 
 	// State variables
-	bool draw_menu;
-	bool draw_control_points;
-	bool drawing_curve;
-	bool pressing;
-	State draw_state;
+	bool draw_menu;					// Should we draw the help menu?
+	bool draw_control_points;		// Should we draw the control points?
+	bool drawing_curve;				// Are we drawing a curve right now?
+	bool pressing;					// Is the mouse button down?
+	State draw_state;				// Which draw state are we in?
 
 	// Current end points for line/circle/clock
 	Point2D start;

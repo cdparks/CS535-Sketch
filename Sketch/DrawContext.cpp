@@ -53,7 +53,7 @@ void DrawContext::write(ostringstream &os, GLfloat x, GLfloat y, float *color){
 // Draw the menu, state, and mouse position
 void DrawContext::draw_interface(void){
 	Point2D cursor(MENU_POS);
-	// "Help" toggle
+	// Help toggle
 	for(size_t i = 0; i < TOGGLE_SIZE; ++i, cursor.y -= 13){
 		ostringstream toggle_stream;
 		toggle_stream << TOGGLE[i];
@@ -67,6 +67,7 @@ void DrawContext::draw_interface(void){
 			write(stream, cursor.x, cursor.y, (float*)GREEN);
 		}
 	}
+	// Current drawing state
 	ostringstream state_stream;
 	switch(draw_state){
 	case LINE:
@@ -90,11 +91,12 @@ void DrawContext::draw_interface(void){
 	}else{
 		state_stream << "]";
 	}
+	// Position of cursor in draw space
 	state_stream << " at (" << mouse.x << ", " << mouse.y << ")";
 	write(state_stream, MOUSE_POS.x, MOUSE_POS.y, (float*)GREEN);
 }
 
-// Is (x, y) within the window?
+// Is (x, y) inside the window bounds?
 bool DrawContext::in_window(int x, int y){
 	return x > 0 && x < WIDTH && y > 0 && y < HEIGHT;
 }
@@ -110,11 +112,12 @@ GLint DrawContext::int_distance(Point2D &start, Point2D &end){
 // and draw temporary shapes (rubber-band lines and circles) and
 // clock hands.
 void DrawContext::draw_shapes(){
-	time_t t = time(NULL);
-	TimeAngle tr(localtime(&t));
-	vector<Point2D> pixels;
+	time_t t = time(NULL);			// Get time right now
+	TimeAngle ta(localtime(&t));	// Calculate trigonometric data for all clock hands
+	vector<Point2D> pixels;			// All temporary drawing goes here
 	glColor3fv(WHITE);
-	// Add rubber-band UI to local pixel vector
+	
+	// Write rubber-band UI to local pixels
 	if(pressing){
 		GLint radius;
 		switch(draw_state){
@@ -127,13 +130,14 @@ void DrawContext::draw_shapes(){
 		case CLOCK:
 			radius = int_distance(start, mouse);
 			make_circle(start, radius, pixels);
-			make_hands(start, radius, pixels, tr);
+			make_hands(start, radius, pixels, ta);
 			break;
 		default:
 			break;
 		}
 	}
-	// Draw control points and lines while building a curve
+	
+	// Write control points and lines to local pixels while building a curve
 	if(drawing_curve){
 		if(control_points.size()){
 			for(size_t i = 1; i < control_points.size(); ++i){
@@ -142,23 +146,30 @@ void DrawContext::draw_shapes(){
 			make_line(control_points.back(), mouse, pixels);
 		}
 	}
+
+	// Update clock hands
+	for(size_t i = 0; i < clock_data.size(); ++i){
+		make_hands(clock_centers[i], clock_radii[i], pixels, ta);
+	}
+
+	// Draw all temporary pixels
+	VertexBuffer(pixels).draw();
+	pixels.clear();
+	
 	// Draw all saved pixel data
 	draw_buffers(line_data);
 	draw_buffers(curve_data);
 	draw_buffers(circle_data);
 	draw_buffers(clock_data);
-	for(size_t i = 0; i < clock_data.size(); ++i){
-		make_hands(clock_centers[i], clock_radii[i], pixels, tr);
-	}
+
+
 	// Draw saved control points
 	if(draw_control_points){
 		glColor3fv(GREEN);
 		draw_buffers(control_data);
 		glColor3fv(WHITE);
 	}
-	// Draw all temporary pixels
-	VertexBuffer(pixels).draw();
-	pixels.clear();
+
 	glutPostRedisplay();
 }
 
@@ -170,8 +181,8 @@ void DrawContext::draw_buffers(vector<VertexBuffer*> &buffers){
 }
 
 // All saved pixel data is saved in a shape-specific stack.
-// Each mode supports full undo by popping the most recent
-// addition from the shape's stack.
+// Each mode supports full undo by popping from its respective
+// stack.
 void DrawContext::undo(){
 	switch(draw_state){
 	case LINE:
@@ -216,10 +227,15 @@ void DrawContext::delete_buffers(vector<VertexBuffer*> &buffers){
 }
 
 // Lines, Circles, and Clocks work like so:
-// MOUSE DOWN -> start Point
+// MOUSE DOWN -> Shape starting point - rubber-banding
 // DRAG
-// MOUSE UP -> end Point
-// point_start
+// MOUSE UP -> Shape end point - create shape
+// 
+// Curves work like so:
+// MOUSE DOWN, MOUSE UP -> Control Point 1 - rubber-banding
+// MOUSE DOWN, MOUSE UP -> Control Point 2 - rubber-banding
+// MOUSE DOWN, MOUSE UP -> Control Point 3 - rubber-banding
+// MOUSE DOWN, MOUSE UP -> Control Point 4 - make curve
 void DrawContext::point_start(GLint button, GLint x, GLint y){
 	if(button == GLUT_LEFT_BUTTON){
 		switch(draw_state){
@@ -243,6 +259,7 @@ void DrawContext::point_start(GLint button, GLint x, GLint y){
 	}
 }
 
+// Mouse up events as described above. Create and save shapes here.
 void DrawContext::point_finish(GLint button, GLint x, GLint y){
 	if(button == GLUT_LEFT_BUTTON){
 		GLint radius;
@@ -284,24 +301,32 @@ void DrawContext::point_finish(GLint button, GLint x, GLint y){
 	}
 }
 
+// Private display callback
 void DrawContext::on_display(){
-	glClear(GL_COLOR_BUFFER_BIT); // clearing the buffer
+	glClear(GL_COLOR_BUFFER_BIT);
 	draw_interface();
 	draw_shapes();
-	glutSwapBuffers(); // display the buffer
+	glutSwapBuffers();
 }
 
+// Private keyboard callback
 void DrawContext::on_keyboard(unsigned char key, int x, int y){
 	State old_state = draw_state;
 	switch (key){
+	
+	// Toggle help menu
 	case 'h':
 	case 'H':
 		draw_menu = !draw_menu;
 		break;
+
+	// Toggle control points
 	case 'p':
 	case 'P':
 		draw_control_points = !draw_control_points;
 		break;
+
+	// Clear screen
 	case 'x':
 	case 'X':
 		delete_buffers(line_data);
@@ -312,10 +337,14 @@ void DrawContext::on_keyboard(unsigned char key, int x, int y){
 		clock_centers.clear();
 		clock_radii.clear();
 		break;
+
+	// Undo last addition in current mode
 	case 'u':
 	case 'U':
 		undo();
 		break;
+
+	// Change drawing states
 	case 'l':
 	case 'L':
 		draw_state = LINE;
@@ -332,20 +361,25 @@ void DrawContext::on_keyboard(unsigned char key, int x, int y){
 	case 'C':
 		draw_state = CLOCK;
 		break;
+
+	// Exit
 	case 'q':
 	case 'Q':
-	case 27:  // Typed the Escape key, so exit.
+	case 27:
 		exit(0);
 		break;
 	default:
 		break;
 	}
+	
+	// Can leave CURVE state in the middle of drawing a curve
 	if(old_state == CURVE && old_state != draw_state){
 		control_points.clear();
 	}
 	glutPostRedisplay();
 }
 
+// Private mouse-button-press callback
 void DrawContext::on_mouse(int button, int state, int x, int y){
 	if(button == GLUT_LEFT){
 		if(state == GLUT_DOWN){
@@ -359,34 +393,38 @@ void DrawContext::on_mouse(int button, int state, int x, int y){
 	glutPostRedisplay();
 }
 
+// Private motion callback
 void DrawContext::on_motion(int x, int y){
 	mouse.x = x;
 	mouse.y = y;
 	glutPostRedisplay();
 }
 
+// Private resize callback
 void DrawContext::on_resize(GLint newWidth, GLint newHeight){
 	glutReshapeWindow(WIDTH, HEIGHT);
 }
 
+// Public callbacks must get singleton and call corresponding
+// private callback
 void DrawContext::Display(void){
 	get_instance().on_display();
-};
+}
 
 void DrawContext::Keyboard(unsigned char key, int x, int y){
 	get_instance().on_keyboard(key, x, y); 
-};
+}
 
 void DrawContext::Mouse(int button, int state, int x, int y){
 	get_instance().on_mouse(button, state, x, y);
-};
+}
 
 void DrawContext::Motion(int x, int y){
 	get_instance().on_motion(x, y);
-};
+}
 
 void DrawContext::Resize(GLint newWidth, GLint newHeight){
 	get_instance().on_resize(newWidth, newHeight);
-};
+}
 
 #endif

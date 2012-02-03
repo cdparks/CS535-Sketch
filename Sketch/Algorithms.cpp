@@ -15,45 +15,6 @@ void swap_set_pixel(int x, int y, vector<Point2D> &pixels){
 	pixels.push_back(Point2D(y, HEIGHT - x));
 }
 
-// Exploit radial symmetry for circle drawing
-void circle_points(GLint cx, GLint cy, GLint x, GLint y, vector<Point2D> &pixels){
-	set_pixel(cx + x, cy + y, pixels);
-	set_pixel(cx - x, cy + y, pixels);
-	set_pixel(cx + x, cy - y, pixels);
-	set_pixel(cx - x, cy - y, pixels);
-	if(x != y){
-		set_pixel(cx + y, cy + x, pixels);
-		set_pixel(cx - y, cy + x, pixels);
-		set_pixel(cx + y, cy - x, pixels);
-		set_pixel(cx - y, cy - x, pixels);
-	}
-}
-
-// Midpoint circle algorithm. Pretty much verbatim from textbook
-void make_circle(Point2D center, GLint radius, vector<Point2D> &pixels){
-	GLint x = 0;
-	GLint y = radius;
-	GLint d = 1 - radius;
-	GLint dE = 3;
-	GLint dSE = -2 * radius + 5;
-	circle_points(center.x, center.y, x, y, pixels);
-	while(y > x){
-		x += 1;
-		if(d < 0){
-			d += dE;
-			dE += 2;
-			dSE += 2;
-		}else{
-			d += dSE;
-			dE += 2;
-			dSE += 4;
-			y -= 1;
-		}
-		circle_points(center.x, center.y, x, y, pixels);
-	}
-}
-
-
 // Midpoint line drawing algorithm. Largely from textbook plus modifications
 // for drawing in all octants.
 void make_line(Point2D p0, Point2D p1, vector<Point2D> &pixels){
@@ -90,19 +51,70 @@ void make_line(Point2D p0, Point2D p1, vector<Point2D> &pixels){
 
 	draw_pixel(x, y, pixels);
 	while(x < p1.x){
-		x += 1;
-		bool east = d <= 0;
-		d += (dE * east) + (dNE * (1 - east));
-		y += (step_y * (1 - east));
 		/*if(d <= 0){
-			// Go East
 			d += dE;
 		}else{
-			// Go North (or South) East
 			d += dNE;
 			y += step_y;
 		}*/
+
+		// Branchless version
+		x += 1;
+		bool east = d <= 0;
+		bool northeast = !east;
+		// Go east or northeast
+		d += dE * east + dNE * northeast;
+		y += step_y * northeast;
+
 		draw_pixel(x, y, pixels);
+	}
+}
+
+// Exploit radial symmetry for circle drawing
+void circle_points(GLint cx, GLint cy, GLint x, GLint y, vector<Point2D> &pixels){
+	set_pixel(cx + x, cy + y, pixels);
+	set_pixel(cx - x, cy + y, pixels);
+	set_pixel(cx + x, cy - y, pixels);
+	set_pixel(cx - x, cy - y, pixels);
+	if(x != y){
+		set_pixel(cx + y, cy + x, pixels);
+		set_pixel(cx - y, cy + x, pixels);
+		set_pixel(cx + y, cy - x, pixels);
+		set_pixel(cx - y, cy - x, pixels);
+	}
+}
+
+// Midpoint circle algorithm. Pretty much verbatim from textbook
+void make_circle(Point2D center, GLint radius, vector<Point2D> &pixels){
+	GLint x = 0;
+	GLint y = radius;
+	GLint d = 1 - radius;
+	GLint dE = 3;
+	GLint dSE = -2 * radius + 5;
+	circle_points(center.x, center.y, x, y, pixels);
+	while(y > x){
+		/*
+		if(d < 0){
+			d += dE;
+			dE += 2;
+			dSE += 2;
+		}else{
+			d += dSE;
+			dE += 2;
+			dSE += 4;
+			y -= 1;
+		}*/
+
+		// Branchless version
+		x += 1;
+		bool east = d < 0;
+		bool southeast = !east;
+		d += dE * east + dSE * southeast;
+		dE += 2;
+		dSE += 2 * east + 4 * southeast;
+		y -= 1 * southeast;
+
+		circle_points(center.x, center.y, x, y, pixels);
 	}
 }
 
