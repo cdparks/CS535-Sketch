@@ -47,26 +47,6 @@ private:
 	// Truncated distance from start to end
 	GLint int_distance(Point2D &start, Point2D &end);
 
-	// Write single pixel vector
-	void set_pixel(int x, int y, vector<Point2D> &pixels);
-	void swap_set_pixel(int x, int y, vector<Point2D> &pixels);
-	
-	// Write line pixels to vector
-	void make_line(Point2D p0, Point2D p1, vector<Point2D> &pixels);
-
-	// Write circle pixels to vector
-	void circle_points(GLint cx, GLint cy, GLint x, GLint y, vector<Point2D> &pixels);
-	void make_circle(Point2D center, GLint radius, vector<Point2D> &pixels);
-
-	// Write curve pixels to vector
-	void make_curve(vector<Point2D> &pixels);
-
-	// Write clock pixels to vector
-	void make_clock(Point2D center, GLint radius, vector<Point2D> &pixels, tm *now);
-
-	// Write clock hand pixels to vector
-	void make_hands(Point2D center, GLint radius, vector<Point2D> &pixels, TimeAngle &ta);
-
 	// Draw everything
 	void draw_shapes(void);
 
@@ -94,7 +74,7 @@ private:
 	Point2D start;
 	Point2D mouse;
 
-	// Current control points for cruve
+	// Current control points for curve
 	vector<Point2D> control_points;
 
 	// Saved data

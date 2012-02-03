@@ -1,5 +1,5 @@
-#ifndef PIXEL_COLLECTION
-#define PIXEL_COLLECTION
+#ifndef VERTEX_BUFFER
+#define VERTEX_BUFFER
 
 #include <vector>
 

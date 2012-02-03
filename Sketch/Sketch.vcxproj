@@ -74,10 +74,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Algorithms.cpp" />
     <ClCompile Include="DrawContext.cpp" />
     <ClCompile Include="Sketch.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Algorithms.h" />
     <ClInclude Include="DrawContext.h" />
     <ClInclude Include="Globals.h" />
     <ClInclude Include="VertexBuffer.h" />
