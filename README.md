@@ -1,8 +1,10 @@
-#CS535-Sketch
+CS535-Sketch
+============
 
 Sketch is a small application to test primitive drawing algorithms in OpenGL.
 
-#Commands
+Commands
+--------
 
 Sketch uses a simplified UI consisting of keyboard commands. Press the `H` 
 key at any time to toggle a dropdown menu showing each of the commands. 
@@ -30,7 +32,8 @@ The last thre commands do almost exactly what a reasonable person would expect,
 except that `Undo` is drawing state sensitive. For example, in the `Line` 
 state, only lines are removed (in the reverse order that they were drawn).
 
-#Drawing
+Drawing
+-------
 
 In the `Line`, `Circle`, and `Clock` states, the user clicks the left mouse
 button down to indicate a starting point, drags the pointer to an end point, 
@@ -41,8 +44,9 @@ In the `Curve` state, the user indicates four control points using a full click
 and release. A line is drawn between each point until the fourth point is drawn
 and a Bezier curve is generated.
 
-#Contact
+Contact
+-------
 
 Christopher D. Parks (<chris.parks@uky.edu>)  
-hosted on [github][https://github.com/cdparks/CS535-Sketch]
+hosted on [github](https://github.com/cdparks/CS535-Sketch)
 
