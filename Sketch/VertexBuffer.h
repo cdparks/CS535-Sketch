@@ -1,5 +1,5 @@
-#ifndef VERTEX_BUFFER
-#define VERTEX_BUFFER
+#ifndef VERTEX_BUFFER_H
+#define VERTEX_BUFFER_H
 
 #include <vector>
 
