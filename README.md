@@ -43,6 +43,5 @@ and a Bezier curve is generated.
 
 #Contact
 
-Christopher D. Parks 
-<chris.parks@uky.edu>
+Christopher D. Parks (<chris.parks@uky.edu>)
 
